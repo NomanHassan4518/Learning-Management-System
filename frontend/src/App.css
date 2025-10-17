@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Alice&display=swap');
+body{
+  font-family: sans-serif;
+  background-color: #fdf6ea;
+}
+
+
+.font-alice {
+  font-family: 'Alice', serif;
+}
+
+ .anticon-close{
+  position: fixed !important;
+  right: 23px !important; 
+  font-size: 25px !important;
+  color: white !important;
+}
