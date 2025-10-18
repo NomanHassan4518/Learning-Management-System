@@ -1,28 +1,105 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useSpinner } from "../Context/SpinnerContext";
 
 const CourseDetail = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [lessons, setLessons] = useState([]);
+  const [enrolled, setEnrolled] = useState(false);
+
   const { state } = useLocation();
   const course = state?.course;
+  const user = JSON.parse(localStorage.getItem("user"));
+  const { setLoading } = useSpinner();
 
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  useEffect(() => {
+    if (!user || !course) return;
+
+    const fetchEnrollmentAndLessons = async () => {
+      try {
+        setLoading(true);
+
+        const enrollmentRes = await axios.get(
+          `http://localhost:5000/api/enrollments/user/${user.id}`
+        );
+
+        const userEnrollments = enrollmentRes.data || [];
+        const isEnrolled = userEnrollments.some(
+          (enroll) => enroll.course_id?._id === course._id
+        );
+
+        if (isEnrolled) {
+          setEnrolled(true);
+
+          const lessonsRes = await axios.get(
+            `http://localhost:5000/api/lessons/course/${course._id}`
+          );
+          setLessons(lessonsRes.data);
+        }
+      } catch (error) {
+        console.log(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEnrollmentAndLessons();
+  }, [user?.id, course?._id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const fetchLessons = async () => {
+    try {
+      const lessonsRes = await axios.get(
+        `http://localhost:5000/api/lessons/course/${course._id}`
+      );
+      setLessons(lessonsRes.data);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`🎉 Enrollment Successful!\nThank you, ${formData.name}!`);
-    setFormData({ name: "", email: "", message: "" });
+    try {
+      setLoading(true);
+
+      await axios.post("http://localhost:5000/api/enrollments", {
+        user_id: user.id,
+        course_id: course._id,
+      });
+
+      setEnrolled(true);
+      toast.success(`Enrollment Successful! Thank you, ${formData.name}`);
+      setFormData({ name: "", email: "", message: "" });
+
+      await fetchLessons();
+    } catch (error) {
+      toast.error("Enrollment failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!course) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-2xl font-semibold text-gray-700">Course not found.</h2>
-        <Link to="/courses" className="mt-4 inline-block text-[#27ae60] hover:underline">
+        <h2 className="text-2xl font-semibold text-gray-700">
+          Course not found.
+        </h2>
+        <Link
+          to="/courses"
+          className="mt-4 inline-block text-[#27ae60] hover:underline"
+        >
           Go Back to Courses
         </Link>
       </div>
@@ -32,7 +109,9 @@ const CourseDetail = () => {
   return (
     <div className="bg-[#fdf6ea] min-h-screen pb-20">
       <div className="bg-[#da853d] px-6 sm:px-10 py-6 pt-24 w-full text-white text-center sm:text-left">
-        <h1 className="text-3xl sm:text-4xl font-alice font-semibold">{course.title}</h1>
+        <h1 className="text-3xl sm:text-4xl font-alice font-semibold">
+          {course.title}
+        </h1>
         <p className="mt-2 text-xs sm:text-sm space-x-2 font-extralight">
           <Link to="/">Home</Link>
           <span>|</span>
@@ -70,12 +149,61 @@ const CourseDetail = () => {
 
             <div className="flex flex-col sm:flex-row sm:justify-between mt-2 text-xs sm:text-sm text-gray-600">
               <p>
-                <strong>Lessons:</strong> {course.lessons}
+                <strong>Lessons:</strong> {lessons.length}
               </p>
               <p>
                 <strong>Duration:</strong> {course.duration}
               </p>
             </div>
+          </div>
+
+          <div className="mt-5">
+            <h2 className="text-2xl font-alice font-semibold text-gray-800 mb-4">
+              Course Lessons
+            </h2>
+            {enrolled ? (
+              lessons.length === 0 ? (
+                <p className="text-gray-600">No lessons available for this course.</p>
+              ) : (
+                <div className="space-y-4">
+                  {lessons.map((lesson, index) => (
+                    <div
+                      key={lesson._id || index}
+                      className="border border-gray-200 rounded-md p-4 shadow-sm hover:shadow-md transition"
+                    >
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold text-gray-800">
+                          {index + 1}. {lesson.title}
+                        </h3>
+                        <span className="text-xs px-2 py-1 bg-gray-200 rounded">
+                          {lesson.type === "video" ? "Video" : "Text"}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 mt-2">{lesson.desc}</p>
+
+                      {lesson.type === "video" && lesson.video && (
+                        <div className="mt-2">
+                          <a
+                            href={lesson.video}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#27ae60] hover:underline text-sm"
+                          >
+                            Watch Video
+                          </a>
+                        </div>
+                      )}
+
+                      {lesson.type === "text" && lesson.content && (
+                        <div className="mt-2 text-gray-700 text-xs">{lesson.content}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              <p className="text-sm font-semibold">You are not enrolled in this course. Please enroll to access the lessons.</p>
+            )}
           </div>
         </div>
 
@@ -114,19 +242,6 @@ const CourseDetail = () => {
                 required
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#27ae60]"
               />
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1 text-gray-700">
-                Message (Optional)
-              </label>
-              <textarea
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                rows="3"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#27ae60]"
-              ></textarea>
             </div>
 
             <button

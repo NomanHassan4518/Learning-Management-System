@@ -1,10 +1,15 @@
 import React from "react";
 import { FaPhone, FaFax, FaEnvelope, FaArrowRight } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
-import { courses } from "../assets/data";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Footer = () => {
+  const courses = JSON.parse(localStorage.getItem("courses"));
+  const navigate = useNavigate();
+
+  const handleNavigate = (course) => {
+    navigate(`/course/${course._id}`, { state: { course } });
+  };
   return (
     <footer className="bg-[#f5e9d4] text-gray-800 relative pt-20 font-alice">
       <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-[#fff8ef] p-2 rounded-full">
@@ -32,11 +37,14 @@ const Footer = () => {
         <div>
           <h3 className="text-lg font-semibold mb-4">Popular Courses</h3>
           <ul className="space-y-2 text-sm">
-            {courses.slice(0, 3).map((course) => (
-              <li className=" border-b border-[#e6decf] pb-2 cursor-pointer hover:text-green-700 transition">
+            {courses?.slice(0, 3).map((course) => (
+              <button
+                onClick={() => handleNavigate(course)}
+                className="text-start border-b border-[#e6decf] pb-2 cursor-pointer hover:text-green-700 transition"
+              >
                 <p>{course.title}</p>{" "}
                 <p className="text-[#da853d] mt-1">Free</p>
-              </li>
+              </button>
             ))}
           </ul>
         </div>

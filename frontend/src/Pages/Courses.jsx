@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { courses } from "../assets/data";
 import CourseCard from "../Components/CourseCard";
 
 const Courses = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const coursesPerPage = 5;
+  const courses = JSON.parse(localStorage.getItem("courses"));
 
   const indexOfLastCourse = currentPage * coursesPerPage;
   const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
@@ -26,7 +26,9 @@ const Courses = () => {
   return (
     <div className="bg-[#fdf6ea] min-h-screen">
       <div className="bg-[#da853d] px-6 sm:px-10 py-6 pt-24 w-full text-white text-center sm:text-left">
-        <h1 className="text-3xl sm:text-4xl font-alice font-semibold">Courses</h1>
+        <h1 className="text-3xl sm:text-4xl font-alice font-semibold">
+          Courses
+        </h1>
         <p className="mt-2 text-xs sm:text-sm space-x-2 font-extralight">
           <Link to="/">Home</Link>
           <span>|</span>
@@ -34,7 +36,7 @@ const Courses = () => {
         </p>
       </div>
 
-      <div className="px-5 sm:px-10 lg:px-16 py-10">
+      <div className="px-5 sm:px-10 lg:px-16 pt-10 pb-20">
         <div className="flex flex-col items-center justify-center text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 font-alice text-gray-800">
             Our Popular Courses
@@ -44,7 +46,7 @@ const Courses = () => {
 
         <div className="mt-6 space-y-6">
           {currentCourses.map((course) => (
-            <CourseCard key={course.id} course={course} />
+            <CourseCard key={course._id} course={course} />
           ))}
         </div>
 

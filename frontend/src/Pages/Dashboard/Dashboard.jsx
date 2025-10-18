@@ -1,18 +1,47 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { courses } from "../../assets/data";
+import axios from "axios";
+import { useSpinner } from "../../Context/SpinnerContext";
 
 const Dashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
-  const myCourses = courses;
+  const [courses, setCourses] = useState([]);
+
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user"));
+  const { setLoading } = useSpinner();
+
+  useEffect(() => {
+    if (user.isAdmin) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [setIsAdmin, user.isAdmin]);
+
+  useEffect(() => {
+    const fetchEnrollment = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `http://localhost:5000/api/enrollments/user/${user.id}`
+        );
+        setCourses(res.data);
+      } catch (error) {
+        console.log(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEnrollment();
+  }, [setLoading, user.id]);
 
   const handleNavigate = (course) => {
-    navigate(`/course/${course.id}`, { state: { course } });
+    navigate(`/course/${course._id}`, { state: { course } });
   };
 
   return (
-    <div>
+    <div className="pb-20">
       <div className="bg-[#da853d] px-10 py-6 pt-24 w-full text-white flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-alice font-semibold">Dashboard</h1>
@@ -22,12 +51,14 @@ const Dashboard = () => {
             <span>Dashboard</span>
           </p>
         </div>
-        <button
-          onClick={() => setIsAdmin(!isAdmin)}
-          className="bg-white text-[#da853d] px-4 py-2 text-xs font-semibold rounded-md hover:bg-gray-100 transition"
-        >
-          Switch to {isAdmin ? "Student" : "Admin"}
-        </button>
+        {user.isAdmin && (
+          <button
+            onClick={() => setIsAdmin(!isAdmin)}
+            className="bg-white text-[#da853d] px-4 py-2 text-xs font-semibold rounded-md hover:bg-gray-100 transition"
+          >
+            Switch to {isAdmin ? "Student" : "Admin"}
+          </button>
+        )}
       </div>
 
       <div className="md:p-10 px-5 py-7">
@@ -53,7 +84,8 @@ const Dashboard = () => {
               <div className="border border-[#f0e0c9] bg-[#fff8ef] rounded-2xl p-6 shadow hover:shadow-lg transition">
                 <h3 className="font-semibold text-lg mb-3">Add Lessons</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Add lessons under an existing course and manage content easily.
+                  Add lessons under an existing course and manage content
+                  easily.
                 </p>
                 <Link
                   to="/admin/add-lesson"
@@ -83,7 +115,7 @@ const Dashboard = () => {
               Student Dashboard
             </h2>
 
-            {myCourses.length === 0 ? (
+            {courses.length === 0 ? (
               <div className="text-center py-20">
                 <h3 className="text-gray-700 mb-2">
                   You haven’t enrolled in any courses yet.
@@ -97,28 +129,28 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {myCourses.map((course) => (
+                {courses.map((course) => (
                   <div
-                    key={course.id}
+                    key={course._id}
                     className="bg-[#fff8ef] border border-[#f0e0c9] rounded-2xl shadow hover:shadow-lg transition overflow-hidden"
                   >
                     <img
-                      src={course.image}
-                      alt={course.title}
+                      src={course.course_id.image}
+                      alt={course.course_id.title}
                       className="w-full h-40 object-cover"
                     />
                     <div className="p-4">
                       <p className="text-[#da853d] text-sm font-semibold mb-1">
-                        {course.price}
+                        {course.course_id.price}
                       </p>
                       <h3 className="text-lg font-alice font-semibold mb-2 text-gray-800">
-                        {course.title}
+                        {course.course_id.title}
                       </h3>
                       <p className="text-gray-600 text-xs mb-3">
-                        {course.desc}
+                        {course.course_id.desc}
                       </p>
                       <button
-                        onClick={() => handleNavigate(course)}
+                        onClick={() => handleNavigate(course.course_id)}
                         className="text-sm text-[#27ae60] hover:underline"
                       >
                         Access Lessons →

@@ -13,7 +13,7 @@ const instructors = [
     name: "Sarah Lee",
     image:
       "https://dtlmselementor.wpengine.com/wp-content/uploads/2023/11/Teacher-image-1.jpg",
-    specialization: "AI & Machine Learning Expert",
+    specialization: "AI & Machine Learning",
   },
   {
     id: 3,

@@ -1,36 +1,54 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useSpinner } from "../../Context/SpinnerContext";
+import { useAuth } from "../../Context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    role: "student",
   });
+
+  const { setLoading } = useSpinner();
+  const { setAuth } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Registration successful!");
-    navigate("/login");
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/register",
+        formData
+      );
+      if (res.status === 201) {
+        toast.success(res.data.message);
+        setAuth(res.data);
+        navigate("/courses");
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#fdf6ea] flex justify-center items-center px-4 pt-10 pb-20">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <div className="text-center mb-6">
-                   <h2 className="text-2xl font-bold text-gray-800 font-alice">
-            Create Account
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Join our learning community today
-          </p>
-        </div>
+    <div className="min-h-screen mt-20 pb-20 flex justify-center items-center bg-gray-50 ">
+      <div className="bg-white  px-10 py-5 rounded-2xl shadow-lg w-full max-w-md">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center font-alice">
+          Register
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -45,7 +63,6 @@ const Register = () => {
               required
             />
           </div>
-
           <div>
             <label className="text-sm font-medium text-gray-700">Email</label>
             <input
@@ -58,9 +75,10 @@ const Register = () => {
               required
             />
           </div>
-
           <div>
-            <label className="text-sm font-medium text-gray-700">Password</label>
+            <label className="text-sm font-medium text-gray-700">
+              Password
+            </label>
             <input
               type="password"
               name="password"
@@ -71,7 +89,6 @@ const Register = () => {
               required
             />
           </div>
-
           <button
             type="submit"
             className="w-full bg-[#27ae60] text-white py-2 rounded-md hover:bg-green-700 transition"
@@ -79,13 +96,6 @@ const Register = () => {
             Register
           </button>
         </form>
-
-        <p className="text-center text-sm text-gray-600 mt-5">
-          Already have an account?{" "}
-          <Link to="/login" className="text-[#27ae60] font-medium hover:underline">
-            Login here
-          </Link>
-        </p>
       </div>
     </div>
   );

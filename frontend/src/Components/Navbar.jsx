@@ -1,11 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Drawer, Button } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
+import { useAuth } from "../Context/AuthContext";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const user = JSON.parse(localStorage.getItem("user"));
+  const location = useLocation();
+  const { setAuth } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setAuth(null);
+    localStorage.removeItem("user");
+    navigate("/");
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -16,21 +27,37 @@ const Navbar = () => {
   const navLinkClass = ({ isActive }) =>
     `block pb-1 border-b-2 transition ${
       isActive
-        ? `${!scrolled ? "border-white" : "border-black"} font-semibold`
+        ? `${
+            scrolled ||
+            location.pathname === "/register" ||
+            location.pathname === "/login"
+              ? "border-black"
+              : "border-white"
+          } font-semibold`
         : "border-transparent hover:border-gray-300 "
     }`;
 
   return (
     <div
       className={`fixed top-0 left-0 w-full z-50 flex items-center justify-between py-3 px-10 transition-all duration-300 ${
-        scrolled ? "bg-[#fdf6ea] shadow-md" : "bg-transparent text-white"
+        scrolled ||
+        location.pathname === "/register" ||
+        location.pathname === "/login"
+          ? "bg-[#fdf6ea] shadow-md"
+          : "bg-transparent text-white"
       }`}
     >
       <NavLink to="/">
         <img
           src="https://dtlmselementor.wpengine.com/wp-content/uploads/2023/11/lms-logo.png"
           alt="LMS Logo"
-          className={`w-12 ${!scrolled && "filter brightness-0 invert"}`}
+          className={`w-12 ${
+            scrolled ||
+            location.pathname === "/register" ||
+            location.pathname === "/login"
+              ? ""
+              : "filter brightness-0 invert"
+          }`}
         />
       </NavLink>
 
@@ -50,12 +77,20 @@ const Navbar = () => {
       </div>
 
       <div className="hidden md:flex space-x-5 text-sm font-medium">
-        <NavLink to="/register" className={navLinkClass}>
-          Register
-        </NavLink>
-        <NavLink to="/login" className={navLinkClass}>
-          Login
-        </NavLink>
+        {user ? (
+          <button onClick={handleLogout} className={navLinkClass}>
+            Logout
+          </button>
+        ) : (
+          <>
+            <NavLink to="/register" className={navLinkClass}>
+              Register
+            </NavLink>
+            <NavLink to="/login" className={navLinkClass}>
+              Login
+            </NavLink>
+          </>
+        )}
       </div>
 
       <Button

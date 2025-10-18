@@ -1,41 +1,52 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useSpinner } from "../../Context/SpinnerContext";
 
 const AddCourse = () => {
   const [courseData, setCourseData] = useState({
     title: "",
     desc: "",
     category: "",
-    lessons: "",
     duration: "",
     instructor: "",
     image: "",
     price: "Free",
   });
 
+  const { setLoading } = useSpinner();
   const handleChange = (e) => {
     setCourseData({ ...courseData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/courses",
+        courseData
+      );
+      console.log(res.data);
 
-    // Save to localStorage for now (simulate backend)
-    const existing = JSON.parse(localStorage.getItem("courses")) || [];
-    const newCourse = { ...courseData, id: Date.now() };
-    localStorage.setItem("courses", JSON.stringify([...existing, newCourse]));
-
-    alert("✅ Course added successfully!");
-    setCourseData({
-      title: "",
-      desc: "",
-      category: "",
-      lessons: "",
-      duration: "",
-      instructor: "",
-      image: "",
-      price: "Free",
-    });
+      toast.success(" Course added successfully!");
+      setCourseData({
+        title: "",
+        desc: "",
+        category: "",
+        duration: "",
+        instructor: "",
+        image: "",
+        price: "Free",
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add course. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,9 +54,9 @@ const AddCourse = () => {
       <div className="bg-[#da853d] px-10 py-6 pt-24 w-full text-white">
         <h1 className="text-3xl font-alice font-semibold">Add New Course</h1>
         <p className="mt-2 text-xs space-x-2 font-extralight">
-           <Link to="/">Home</Link>
-           <span>|</span>
-           <Link to="/dashboard">Dashboard</Link>
+          <Link to="/">Home</Link>
+          <span>|</span>
+          <Link to="/dashboard">Dashboard</Link>
           <span>|</span>
           <span>Add Course</span>
         </p>
@@ -86,16 +97,6 @@ const AddCourse = () => {
               name="category"
               placeholder="Category (e.g. Web Development)"
               value={courseData.category}
-              onChange={handleChange}
-              required
-              className="border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-[#da853d]"
-            />
-
-            <input
-              type="number"
-              name="lessons"
-              placeholder="Number of Lessons"
-              value={courseData.lessons}
               onChange={handleChange}
               required
               className="border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-[#da853d]"

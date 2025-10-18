@@ -5,7 +5,7 @@ const CourseCard = ({ course }) => {
   const navigate = useNavigate();
 
   const handleNavigate = () => {
-    navigate(`/course/${course.id}`, { state: { course } });
+    navigate(`/course/${course._id}`, { state: { course } });
   };
 
   return (
@@ -14,13 +14,13 @@ const CourseCard = ({ course }) => {
         <img
           src={course.image}
           alt={course.title}
-          className="w-full h-48 sm:h-full object-cover"
+          className="w-full !h-48 sm:h-full object-cover"
         />
       </div>
 
       <div className="px-5 py-4 sm:col-span-8 text-start flex flex-col justify-between">
         <div>
-          <p className="text-[#da853d] text-sm">Free</p>
+          <p className="text-[#da853d] text-sm">{course.price}</p>
           <h3 className="text-lg font-alice font-semibold text-gray-800 mb-1">
             {course.title}
           </h3>
@@ -33,7 +33,7 @@ const CourseCard = ({ course }) => {
             </div>
 
             <div className="flex flex-wrap items-center gap-1 text-xs font-medium text-gray-500">
-              <p>{course.lessons} Lessons</p>
+              <p>{course.lessons.length} Lessons</p>
               <span>|</span>
               <p>{course.duration}</p>
             </div>
